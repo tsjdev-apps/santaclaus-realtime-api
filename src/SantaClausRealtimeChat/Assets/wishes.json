@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Alicia",
+    "wishes": [
+      "Yoga mat",
+      "Essential oil diffuser",
+      "Cookbook"
+    ]
+  },
+  {
+    "name": "Caroline",
+    "wishes": [
+      "Premium watercolor set",
+      "Hardcover journal",
+      "Luxury hand cream"
+    ]
+  },
+  {
+    "name": "Daniel",
+    "wishes": [
+      "Hiking boots",
+      "Smartwatch",
+      "Portable power bank"
+    ]
+  },
+  {
+    "name": "Erik",
+    "wishes": [
+      "Running shoes",
+      "Fitness tracker",
+      "Trail mix assortment"
+    ]
+  },
+  {
+    "name": "Hannah",
+    "wishes": [
+      "Herb garden kit",
+      "Ceramic coffee mugs",
+      "Bluetooth speaker"
+    ]
+  },
+  {
+    "name": "Julia",
+    "wishes": [
+      "E-reader",
+      "Artisanal tea set",
+      "Silk scarf"
+    ]
+  },
+  {
+    "name": "Laura",
+    "wishes": [
+      "Scented candles",
+      "Customized photo book",
+      "Electric kettle"
+    ]
+  },
+  {
+    "name": "Markus",
+    "wishes": [
+      "Electric guitar",
+      "Noise-cancelling headphones",
+      "Vinyl record player"
+    ]
+  },
+  {
+    "name": "Sebastian",
+    "wishes": [
+      "Lego set",
+      "Globe",
+      "Camera"
+    ]
+  },
+  {
+    "name": "Thomas",
+    "wishes": [
+      "Grill",
+      "Grill tongs",
+      "Chili plant"
+    ]
+  }
+]
