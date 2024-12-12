@@ -55,7 +55,8 @@ internal static class ConversationFunctionToolStatics
         RealtimeConversationSession session,
         ConversationItemStreamingFinishedUpdate itemFinishedUpdate)
     {
-        ConsoleHelper.DisplayMessage($" <<< Wish Tool invoked -- getting wishes!", true);
+        ConsoleHelper.DisplayMessage(
+            $" <<< Wish Tool invoked -- getting wishes!", true);
 
         GetWishes(itemFinishedUpdate, out string? name,
             out string? language, out string? wishlist);
