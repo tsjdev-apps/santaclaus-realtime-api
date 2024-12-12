@@ -93,19 +93,12 @@ internal static class ConversationFunctionToolStatics
         // Read the wish items from the database,
         // simulated by a file access
         List<WishItem>? wishes = FileHelper.ReadWishItems();
+        
+        name = GetProperty(
+            itemFinishedUpdate.FunctionCallArguments, "name");
 
-        using JsonDocument jsonDocument = JsonDocument.Parse(
-            itemFinishedUpdate.FunctionCallArguments);
-
-        name = jsonDocument.RootElement.TryGetProperty(
-            "name", out JsonElement nameElement)
-            ? nameElement.GetString()
-            : string.Empty;
-
-        language = jsonDocument.RootElement.TryGetProperty(
-            "language", out JsonElement languageElement)
-            ? languageElement.GetString()
-            : string.Empty;
+        language = GetProperty(
+            itemFinishedUpdate.FunctionCallArguments, "language");
 
         string? capturedName = name;
 
@@ -113,5 +106,28 @@ internal static class ConversationFunctionToolStatics
             wishes?.FirstOrDefault(
                 x => x.Name.Equals(capturedName,
                 StringComparison.InvariantCultureIgnoreCase))?.Wishes ?? []);
+    }
+
+    /// <summary>
+    ///     Extracts the specified property value from the JSON 
+    ///     string of function call arguments.
+    /// </summary>
+    /// <param name="functionCallArguments">The JSON string containing 
+    /// function call arguments.</param>
+    /// <param name="propertyName">The name of the property to 
+    /// extract.</param>
+    /// <returns>The value of the specified property as a string, 
+    /// or an empty string if the property is not found.</returns>
+    private static string GetProperty(
+        string functionCallArguments, string propertyName)
+    {
+        using JsonDocument jsonDocument =
+            JsonDocument.Parse(functionCallArguments);
+
+        return jsonDocument.RootElement.TryGetProperty(
+            propertyName,
+            out JsonElement element)
+            ? element.GetString() ?? string.Empty
+            : string.Empty;
     }
 }
