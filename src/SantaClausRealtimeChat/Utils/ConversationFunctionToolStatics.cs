@@ -23,23 +23,25 @@ internal static class ConversationFunctionToolStatics
     {
         Name = nameof(WishTool),
         Description = WishToolDescription,
-        Parameters = BinaryData.FromString(@"
-                    {
-                      ""type"": ""object"",
-                      ""properties"": {
-                        ""name"": {
-                          ""type"": ""string"",
-                          ""description"": ""The name of the person to get the wishes from""
-                        },
-                        ""language"": {
-                          ""type"": ""string"",
-                          ""description"": ""The current language of the request""
-                        }
-                      },
-                      ""required"": [""name"", ""language""],
-                      ""additionalProperties"": false
+        Parameters = BinaryData.FromString(
+            /* language=Json */
+            """
+            {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the person to get the wishes from"
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "The current language of the request"
                     }
-                ")
+                },
+                "required": ["name", "language"],
+                "additionalProperties": false
+            }
+            """)
     };
 
     /// <summary>
