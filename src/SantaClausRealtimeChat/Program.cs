@@ -1,15 +1,16 @@
 ﻿using Azure.AI.OpenAI;
 using OpenAI;
 using OpenAI.Chat;
-using OpenAI.RealtimeConversation;
+using OpenAI.Realtime;
 using SantaClausRealtimeChat.Helpers;
 using SantaClausRealtimeChat.Utils;
 using System.ClientModel;
 
 ConsoleHelper.ShowHeader();
 
-RealtimeConversationClient? realtimeClient = null;
+RealtimeClient? realtimeClient = null;
 ChatClient? chatClient = null;
+string realtimeModelName = string.Empty;
 
 // Get the current host
 string host =
@@ -33,7 +34,7 @@ switch (host)
                 ConsoleHelper.GetStringFromConsole(
                    "Enter your [yellow]Azure OpenAI[/] chat model name.");
 
-            string realtimeModelName =
+            realtimeModelName =
                 ConsoleHelper.GetStringFromConsole(
                    "Enter your [yellow]Azure OpenAI[/] realtime model name.");
 
@@ -44,7 +45,7 @@ switch (host)
                     new ApiKeyCredential(apiKey));
 
             realtimeClient = aoaiClient
-                    .GetRealtimeConversationClient(realtimeModelName);
+                    .GetRealtimeClient();
 
             chatClient = aoaiClient
                     .GetChatClient(chatModelName);
@@ -57,20 +58,25 @@ switch (host)
                 ConsoleHelper.GetStringFromConsole(
                     "Enter your [yellow]OpenAI[/] API key.");
 
-            string modelName =
+            string chatModelName =
                 ConsoleHelper.SelectFromOptions(
                     [Statics.GPT4oMiniKey, Statics.GPT4oKey,
                     Statics.GPT4TurboKey, Statics.GPT4Key],
                     "Enter the [yellow]model name[/] for the chat.");
 
+            realtimeModelName =
+                ConsoleHelper.SelectFromOptions(
+                    [Statics.GptRealtimeMiniModelName,
+                    Statics.GptRealtimeModelName],
+                    "Enter the [yellow]model name[/] for the real-time conversation.");
+
             OpenAIClient openAIClient = new(apiKey);
 
             realtimeClient =
-                openAIClient.GetRealtimeConversationClient(
-                    Statics.OpenAIRealtimeModelName);
+                openAIClient.GetRealtimeClient();
 
             chatClient =
-                openAIClient.GetChatClient(modelName);
+                openAIClient.GetChatClient(chatModelName);
         }
         break;
 }
@@ -86,14 +92,14 @@ ConsoleHelper.ShowHeader();
 /// <summary>
 ///     Starts the conversation session.
 /// </summary>
-using RealtimeConversationSession session =
-    await realtimeClient.StartConversationSessionAsync();
+using RealtimeSession session =
+    await realtimeClient.StartConversationSessionAsync(realtimeModelName);
 
 /// <summary>
 ///     Configures the conversation session.
 /// </summary>
 /// <param name="options">The options to configure the session.</param>
-await session.ConfigureSessionAsync(new ConversationSessionOptions()
+session.ConfigureSession(new ConversationSessionOptions()
 {
     Voice = ConversationVoice.Echo,
     Tools = { ConversationFunctionToolStatics.WishTool },
@@ -109,7 +115,7 @@ AudioOutputHelper audioOutputHelper = new();
 /// <summary>
 ///     Processes commands received from the service.
 /// </summary>
-await foreach (ConversationUpdate update in session.ReceiveUpdatesAsync())
+await foreach (RealtimeUpdate update in session.ReceiveUpdatesAsync())
 {
     /// <summary>
     ///     Handles the session started update.
@@ -134,10 +140,10 @@ await foreach (ConversationUpdate update in session.ReceiveUpdatesAsync())
     /// <summary>
     ///     Handles the speech started update.
     /// </summary>
-    if (update is ConversationInputSpeechStartedUpdate speechStartedUpdate)
+    if (update.Kind == RealtimeUpdateKind.InputSpeechStarted)
     {
         ConsoleHelper.DisplayMessage(
-            $" <<< Start of speech detected @ {speechStartedUpdate.AudioStartTime}",
+            $" <<< Start of speech detected",
             true);
 
         audioOutputHelper.ClearPlayback();
@@ -146,29 +152,46 @@ await foreach (ConversationUpdate update in session.ReceiveUpdatesAsync())
     /// <summary>
     ///     Handles the speech finished update.
     /// </summary>
-    if (update is ConversationInputSpeechFinishedUpdate speechFinishedUpdate)
+    if (update.Kind == RealtimeUpdateKind.InputSpeechStopped)
     {
         ConsoleHelper.DisplayMessage(
-            $" <<< End of speech detected @ {speechFinishedUpdate.AudioEndTime}",
+            $" <<< End of speech detected",
             true);
     }
 
     /// <summary>
-    ///     Handles the item streaming part delta update.
+    ///     Handles the item streaming audio delta update.
     /// </summary>
-    if (update is ConversationItemStreamingPartDeltaUpdate deltaUpdate)
+    if (update.Kind == RealtimeUpdateKind.ItemStreamingPartAudioDelta)
     {
-        ConsoleHelper.DisplayMessage(deltaUpdate.AudioTranscript, false);
-        ConsoleHelper.DisplayMessage(deltaUpdate.Text, false);
-
+        var deltaUpdate = update as dynamic;
         audioOutputHelper.EnqueueForPlayback(deltaUpdate.AudioBytes);
+    }
+
+    /// <summary>
+    ///     Handles the item streaming audio transcription delta update.
+    /// </summary>
+    if (update.Kind == RealtimeUpdateKind.ItemStreamingPartAudioTranscriptionDelta)
+    {
+        var deltaUpdate = update as dynamic;
+        ConsoleHelper.DisplayMessage(deltaUpdate.AudioTranscript, false);
+    }
+
+    /// <summary>
+    ///     Handles the item streaming text delta update.
+    /// </summary>
+    if (update.Kind == RealtimeUpdateKind.ItemStreamingPartTextDelta)
+    {
+        var deltaUpdate = update as dynamic;
+        ConsoleHelper.DisplayMessage(deltaUpdate.Text, false);
     }
 
     /// <summary>
     ///     Handles the item streaming finished update.
     /// </summary>
-    if (update is ConversationItemStreamingFinishedUpdate itemFinishedUpdate)
+    if (update.Kind == RealtimeUpdateKind.ItemStreamingFunctionCallArgumentsFinished)
     {
+        var itemFinishedUpdate = update as dynamic;
         ConsoleHelper.DisplayMessage("", true);
 
         if (itemFinishedUpdate.FunctionName
@@ -177,7 +200,7 @@ await foreach (ConversationUpdate update in session.ReceiveUpdatesAsync())
             await ConversationFunctionToolStatics.HandleWishToolAsync(
                 chatClient,
                 session,
-                itemFinishedUpdate);
+                update);
         }
 
         // Implement other function tools here
@@ -186,7 +209,7 @@ await foreach (ConversationUpdate update in session.ReceiveUpdatesAsync())
     /// <summary>
     /// Handles the error update.
     /// </summary>
-    if (update is ConversationErrorUpdate errorUpdate)
+    if (update is RealtimeErrorUpdate errorUpdate)
     {
         ConsoleHelper.DisplayError(
             $" <<< ERROR: {errorUpdate.Message}", true);

@@ -1,5 +1,5 @@
 ﻿using OpenAI.Chat;
-using OpenAI.RealtimeConversation;
+using OpenAI.Realtime;
 using SantaClausRealtimeChat.Helpers;
 using SantaClausRealtimeChat.Models;
 using System.ClientModel;
@@ -19,9 +19,9 @@ internal static class ConversationFunctionToolStatics
     /// <summary>
     ///     Represents the tool used to handle wish requests.
     /// </summary>
-    public static readonly ConversationFunctionTool WishTool = new()
+    public static readonly ConversationFunctionTool WishTool = new(
+        name: nameof(WishTool))
     {
-        Name = nameof(WishTool),
         Description = WishToolDescription,
         Parameters = BinaryData.FromString(
             /* language=Json */
@@ -54,8 +54,8 @@ internal static class ConversationFunctionToolStatics
     /// the finished conversation item.</param>
     public static async Task HandleWishToolAsync(
         ChatClient chatClient,
-        RealtimeConversationSession session,
-        ConversationItemStreamingFinishedUpdate itemFinishedUpdate)
+        RealtimeSession session,
+        RealtimeUpdate itemFinishedUpdate)
     {
         ConsoleHelper.DisplayMessage(
             $" <<< Wish Tool invoked -- getting wishes!", true);
@@ -69,10 +69,14 @@ internal static class ConversationFunctionToolStatics
                     PromptStatics.WishPrompt,
                     name, wishlist, language));
 
+        dynamic dynamicUpdate = itemFinishedUpdate;
+        var functionCallId = (string)(dynamicUpdate.CallId ?? dynamicUpdate.FunctionCallId ?? dynamicUpdate.ItemId);
+        var outputText = result.Value.Content[0].Text;
+        
         await session.AddItemAsync(
-            ConversationItem.CreateFunctionCallOutput(
-                itemFinishedUpdate.FunctionCallId,
-                result.Value.Content[0].Text));
+            RealtimeItem.CreateFunctionCallOutput(
+                functionCallId,
+                outputText));
 
         await session.StartResponseAsync();
     }    
@@ -87,7 +91,7 @@ internal static class ConversationFunctionToolStatics
     /// <param name="language">The current language of the request.</param>
     /// <param name="wishlist">The extracted wishlist.</param>
     private static void GetWishes(
-        ConversationItemStreamingFinishedUpdate itemFinishedUpdate,
+        RealtimeUpdate itemFinishedUpdate,
         out string? name,
         out string? language,
         out string wishlist)
@@ -96,11 +100,12 @@ internal static class ConversationFunctionToolStatics
         // simulated by a file access
         List<WishItem>? wishes = FileHelper.ReadWishItems();
         
+        dynamic dynamicUpdate = itemFinishedUpdate;
         name = GetProperty(
-            itemFinishedUpdate.FunctionCallArguments, "name");
+            dynamicUpdate.FunctionCallArguments, "name");
 
         language = GetProperty(
-            itemFinishedUpdate.FunctionCallArguments, "language");
+            dynamicUpdate.FunctionCallArguments, "language");
 
         string? capturedName = name;
 
