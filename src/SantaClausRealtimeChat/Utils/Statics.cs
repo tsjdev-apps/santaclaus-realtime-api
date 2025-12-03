@@ -19,10 +19,16 @@ internal static class Statics
         = "OpenAI";
 
     /// <summary>
-    ///     The name for the OpenAI real-time model.
+    ///    The name for the GPT real-time model.
     /// </summary>
-    public const string OpenAIRealtimeModelName 
-        = "gpt-4o-realtime-preview";
+    public const string GptRealtimeModelName
+        = "gpt-realtime";
+
+    /// <summary>
+    ///    The name for the GPT real-time mini model.
+    /// </summary>
+    public const string GptRealtimeMiniModelName
+        = "gpt-realtime-mini";
 
     /// <summary>
     ///     The key for GPT-4o.
