@@ -1,18 +1,18 @@
-# Use the GPT-4o Realtime model to have a conversation with Santa Claus
+# Use the GPT Realtime (Mini) model to have a conversation with Santa Claus
 
 ![header](/docs/header.png)
 
-This repository provides a .NET 9 console application that integrates the GPT-4o Realtime Model. The application demonstrates how to communicate using your voice.
+This repository provides a .NET 10 console application that integrates the GPT Realtime Model. The application demonstrates how to communicate using your voice.
 
 ## Features
 
-- **GPT-4o Realtime**: AI Model to communicate using Text, Images or Audio.
+- **GPT Realtime** or **GPT Realtime Mini**: AI Models to communicate using Text, Images or Audio.
 - **Modular Design**: Utilizes helper classes for streamlined code management and readability.
 
 ## Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) or any compatible IDE
+- [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+- [Visual Studio 2026](https://visualstudio.microsoft.com/) or any compatible IDE
 - [Azure.AI.OpenAI](https://www.nuget.org/packages/Azure.AI.OpenAI) NuGet package
 - [NAudio](https://www.nuget.org/packages/NAudio) NuGet package
 - [Spectre.Console](https://www.nuget.org/packages/Spectre.Console)NuGet package
