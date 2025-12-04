@@ -11,17 +11,14 @@ internal class AudioInputHelper : Stream, IDisposable
     private const int BYTES_PER_SAMPLE = 2;
     private const int CHANNELS = 1;
 
-    private readonly byte[] _buffer 
-        = new byte[BYTES_PER_SAMPLE * SAMPLES_PER_SECOND * CHANNELS * 10];
+    private readonly byte[] _buffer =
+        new byte[BYTES_PER_SAMPLE * SAMPLES_PER_SECOND * CHANNELS * 10];
 
-    private readonly Lock _bufferLock 
-        = new();
+    private readonly Lock _bufferLock = new();
 
-    private int _bufferReadPos 
-        = 0;
+    private int _bufferReadPos = 0;
 
-    private int _bufferWritePos 
-        = 0;
+    private int _bufferWritePos = 0;
 
     private readonly WaveInEvent _waveInEvent;
 
@@ -33,8 +30,8 @@ internal class AudioInputHelper : Stream, IDisposable
         _waveInEvent = new()
         {
             WaveFormat = new WaveFormat(
-                SAMPLES_PER_SECOND, 
-                BYTES_PER_SAMPLE * 8, 
+                SAMPLES_PER_SECOND,
+                BYTES_PER_SAMPLE * 8,
                 CHANNELS),
         };
 
@@ -43,17 +40,17 @@ internal class AudioInputHelper : Stream, IDisposable
             lock (_bufferLock)
             {
                 int bytesToCopy = e.BytesRecorded;
-                if (_bufferWritePos + bytesToCopy 
+                if (_bufferWritePos + bytesToCopy
                         >= _buffer.Length)
                 {
-                    int bytesToCopyBeforeWrap 
+                    int bytesToCopyBeforeWrap
                         = _buffer.Length - _bufferWritePos;
-                    
+
                     Array.Copy(
-                        e.Buffer, 
+                        e.Buffer,
                         0,
-                        _buffer, 
-                        _bufferWritePos, 
+                        _buffer,
+                        _bufferWritePos,
                         bytesToCopyBeforeWrap);
 
                     bytesToCopy -= bytesToCopyBeforeWrap;
@@ -62,9 +59,9 @@ internal class AudioInputHelper : Stream, IDisposable
 
                 Array.Copy(
                     e.Buffer,
-                    e.BytesRecorded - bytesToCopy, 
-                    _buffer, 
-                    _bufferWritePos, 
+                    e.BytesRecorded - bytesToCopy,
+                    _buffer,
+                    _bufferWritePos,
                     bytesToCopy);
 
                 _bufferWritePos += bytesToCopy;
