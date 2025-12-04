@@ -1,9 +1,9 @@
-﻿using OpenAI.Chat;
+﻿using System.ClientModel;
+using System.Text.Json;
+using OpenAI.Chat;
 using OpenAI.Realtime;
 using SantaClausRealtimeChat.Helpers;
 using SantaClausRealtimeChat.Models;
-using System.ClientModel;
-using System.Text.Json;
 
 namespace SantaClausRealtimeChat.Utils;
 
@@ -70,7 +70,7 @@ internal static class ConversationFunctionToolStatics
                     name, wishlist, language));
 
         dynamic dynamicUpdate = itemFinishedUpdate;
-        var functionCallId = (string)(dynamicUpdate.CallId ?? dynamicUpdate.FunctionCallId ?? dynamicUpdate.ItemId);
+        var functionCallId = (string)(dynamicUpdate.FunctionCallId ?? dynamicUpdate.ItemId);
         var outputText = result.Value.Content[0].Text;
 
         await session.AddItemAsync(
@@ -102,10 +102,10 @@ internal static class ConversationFunctionToolStatics
 
         dynamic dynamicUpdate = itemFinishedUpdate;
         name = GetProperty(
-            dynamicUpdate.FunctionCallArguments, "name");
+            dynamicUpdate.FunctionArguments, "name");
 
         language = GetProperty(
-            dynamicUpdate.FunctionCallArguments, "language");
+            dynamicUpdate.FunctionArguments, "language");
 
         string? capturedName = name;
 

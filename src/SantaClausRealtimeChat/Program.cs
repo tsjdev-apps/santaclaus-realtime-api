@@ -1,10 +1,10 @@
-﻿using Azure.AI.OpenAI;
+﻿using System.ClientModel;
+using Azure.AI.OpenAI;
 using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Realtime;
 using SantaClausRealtimeChat.Helpers;
 using SantaClausRealtimeChat.Utils;
-using System.ClientModel;
 
 ConsoleHelper.ShowHeader();
 
@@ -60,8 +60,12 @@ switch (host)
 
             string chatModelName =
                 ConsoleHelper.SelectFromOptions(
-                    [Statics.GPT4oMiniKey, Statics.GPT4oKey,
-                    Statics.GPT4TurboKey, Statics.GPT4Key],
+                    [Statics.GPT51Key, Statics.GPT5Key,
+                    Statics.GPT5MiniKey, Statics.GPT5NanoKey,
+                    Statics.GPT41Key, Statics.GPT41MiniKey,
+                    Statics.GPT41NanoKey, Statics.GPT4oKey,
+                    Statics.GPT4oMiniKey, Statics.GPT4Key,
+                    Statics.GPT4TurboKey, Statics.GPT35TurboKey],
                     "Enter the [yellow]model name[/] for the chat.");
 
             realtimeModelName =
@@ -113,6 +117,11 @@ session.ConfigureSession(new ConversationSessionOptions()
 AudioOutputHelper audioOutputHelper = new();
 
 /// <summary>
+///     Dictionary to track function names by item ID.
+/// </summary>
+Dictionary<string, string> functionCallTracker = [];
+
+/// <summary>
 ///     Processes commands received from the service.
 /// </summary>
 await foreach (RealtimeUpdate update in session.ReceiveUpdatesAsync())
@@ -142,6 +151,7 @@ await foreach (RealtimeUpdate update in session.ReceiveUpdatesAsync())
     /// </summary>
     if (update.Kind == RealtimeUpdateKind.InputSpeechStarted)
     {
+        ConsoleHelper.DisplayMessage("", true);
         ConsoleHelper.DisplayMessage(
             $" <<< Start of speech detected",
             true);
@@ -157,6 +167,18 @@ await foreach (RealtimeUpdate update in session.ReceiveUpdatesAsync())
         ConsoleHelper.DisplayMessage(
             $" <<< End of speech detected",
             true);
+    }
+
+    /// <summary>
+    ///     Handles the item streaming started update to capture function name.
+    /// </summary>
+    if (update.Kind == RealtimeUpdateKind.ItemStreamingStarted)
+    {
+        var startedUpdate = update as dynamic;
+        if (startedUpdate.FunctionName != null)
+        {
+            functionCallTracker[startedUpdate.ItemId] = startedUpdate.FunctionName;
+        }
     }
 
     /// <summary>
@@ -194,16 +216,24 @@ await foreach (RealtimeUpdate update in session.ReceiveUpdatesAsync())
         var itemFinishedUpdate = update as dynamic;
         ConsoleHelper.DisplayMessage("", true);
 
-        if (itemFinishedUpdate.FunctionName
-            == ConversationFunctionToolStatics.WishTool.Name)
+        // Retrieve the function name from the tracker
+        if (functionCallTracker.TryGetValue(
+            itemFinishedUpdate.ItemId, out string? functionName))
         {
-            await ConversationFunctionToolStatics.HandleWishToolAsync(
-                chatClient,
-                session,
-                update);
-        }
+            if (functionName == ConversationFunctionToolStatics.WishTool.Name)
+            {
+                await ConversationFunctionToolStatics.HandleWishToolAsync(
+                    chatClient,
+                    session,
+                    update);
+            }
 
-        // Implement other function tools here
+            // Implement other function tools here
+            // else if (functionName == OtherTool.Name) { ... }
+
+            // Clean up the tracker
+            functionCallTracker.Remove(itemFinishedUpdate.ItemId);
+        }
     }
 
     /// <summary>
