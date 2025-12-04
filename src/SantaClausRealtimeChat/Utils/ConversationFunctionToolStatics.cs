@@ -72,14 +72,14 @@ internal static class ConversationFunctionToolStatics
         dynamic dynamicUpdate = itemFinishedUpdate;
         var functionCallId = (string)(dynamicUpdate.CallId ?? dynamicUpdate.FunctionCallId ?? dynamicUpdate.ItemId);
         var outputText = result.Value.Content[0].Text;
-        
+
         await session.AddItemAsync(
             RealtimeItem.CreateFunctionCallOutput(
                 functionCallId,
                 outputText));
 
         await session.StartResponseAsync();
-    }    
+    }
 
     /// <summary>
     /// Extracts the wishes, name, and language from the provided update information.
@@ -99,7 +99,7 @@ internal static class ConversationFunctionToolStatics
         // Read the wish items from the database,
         // simulated by a file access
         List<WishItem>? wishes = FileHelper.ReadWishItems();
-        
+
         dynamic dynamicUpdate = itemFinishedUpdate;
         name = GetProperty(
             dynamicUpdate.FunctionCallArguments, "name");
